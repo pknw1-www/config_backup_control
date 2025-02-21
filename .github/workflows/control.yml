@@ -1,0 +1,49 @@
+name: Backup
+on:
+  workflow_dispatch:
+    inputs:
+      docker_service:
+        description: 'use alternative github folder'
+        required: true
+        default: 'radarr'
+      target_folder:
+        description: 'config to backup'
+        required: true
+        type: choice
+        options:
+          - bookstack
+          - caddy
+          - internal_proxy
+          - metube
+          - nginx_proxy_manager
+          - overseerr
+          - overseerr-prod
+          - pihole
+          - portainer
+          - prowlarr
+          - radarr
+          - sonarr
+          - squid
+          - uptime-kuma
+          - utorrent
+
+jobs:
+  install_product:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ovh
+      - name: executing remote ssh
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.TAILSCALE_SSH_SERVER }}
+          username:  ${{ secrets.TAILSCALE_SSH_USER }}
+          key: ${{ secrets.TAILSCALE_SSH_KEY }}
+          port: ${{ secrets.TAILSCALE_SSH_SERVER_PORT }}
+          script: cd /etc/pknw1/config/${ inputs.target_folder } && ls -l
+     
